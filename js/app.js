@@ -874,6 +874,92 @@
     }
   }
 
+  async function fetchAllAtencionesFull() {
+    if (!sb || !navigator.onLine) throw new Error("Necesita conexión para generar el respaldo");
+    const pageSize = 1000;
+    let from = 0;
+    let all = [];
+    for (;;) {
+      const res = await sb.from("atenciones")
+        .select("*, signos(*)")
+        .order("folio", { ascending: true })
+        .range(from, from + pageSize - 1);
+      if (res.error) throw res.error;
+      const chunk = res.data || [];
+      all = all.concat(chunk);
+      if (chunk.length < pageSize) break;
+      from += pageSize;
+    }
+    return all;
+  }
+
+  function csvCell(v) {
+    const s = String(v == null ? "" : v);
+    return '"' + s.replace(/"/g, '""') + '"';
+  }
+
+  function saveViaAnchor(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(url); a.remove(); }, 1500);
+  }
+
+  function descargarArchivo(filename, content, mime) {
+    const blob = new Blob([content], { type: mime });
+    const file = new File([blob], filename, { type: mime });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      navigator.share({ files: [file], title: filename }).catch(function () { saveViaAnchor(blob, filename); });
+    } else {
+      saveViaAnchor(blob, filename);
+    }
+  }
+
+  async function respaldoJSON() {
+    if (!esAdmin()) return;
+    toast("Preparando respaldo...", "ok");
+    try {
+      const all = await fetchAllAtencionesFull();
+      const payload = { generado: new Date().toISOString(), total: all.length, atenciones: all };
+      descargarArchivo("Respaldo_Atenciones_" + todayLocal() + ".json", JSON.stringify(payload, null, 2), "application/json");
+      toast("Respaldo JSON generado (" + all.length + " registros)", "ok");
+    } catch (e) {
+      toast("No se pudo generar el respaldo: " + traducir(e.message || e), "err");
+    }
+  }
+
+  async function respaldoCSV() {
+    if (!esAdmin()) return;
+    toast("Preparando respaldo...", "ok");
+    try {
+      const all = await fetchAllAtencionesFull();
+      const cols = ["folio", "fecha", "hora", "cargo_atiende", "quien_atiende", "nombre", "run", "edad",
+        "domicilio", "fono", "enfermedades_base", "medicamentos", "medicamentos_admin", "tratamiento",
+        "traslado", "traslado_lugar", "traslado_ambulancia", "traslado_personal", "dispositivo",
+        "creado_cliente", "sincronizado_at", "id", "user_id"];
+      const lines = [];
+      lines.push(cols.concat(["signos"]).map(csvCell).join(","));
+      all.forEach(function (r) {
+        const sig = (r.signos || []).map(function (s, i) {
+          const parts = [];
+          ["hora", "pa", "fc", "fr", "sat", "egt", "temp", "eva", "cincinnati"].forEach(function (f) {
+            if (s[f]) parts.push(f.toUpperCase() + " " + s[f]);
+          });
+          return (i + 1) + ") " + parts.join(" ");
+        }).join(" | ");
+        const row = cols.map(function (c) { return r[c]; }).concat([sig]);
+        lines.push(row.map(csvCell).join(","));
+      });
+      descargarArchivo("Respaldo_Atenciones_" + todayLocal() + ".csv", "\ufeff" + lines.join("\r\n"), "text/csv");
+      toast("Respaldo CSV generado (" + all.length + " registros)", "ok");
+    } catch (e) {
+      toast("No se pudo generar el respaldo: " + traducir(e.message || e), "err");
+    }
+  }
+
   async function enterApp(user) {
     currentUser = user;
     $("userEmail").textContent = user.email || "";
@@ -924,6 +1010,8 @@
     $("btnWhatsapp").addEventListener("click", enviarWhatsapp);
     $("btnPdf").addEventListener("click", generarPDF);
     $("btnPdfGlobal").addEventListener("click", generarPDFGlobal);
+    $("btnBackupJson").addEventListener("click", respaldoJSON);
+    $("btnBackupCsv").addEventListener("click", respaldoCSV);
     $("btnGuardar").addEventListener("click", guardar);
     $("btnSyncNow").addEventListener("click", function () { refreshPending(); syncPending(); });
     $("btnCancelEdit").addEventListener("click", resetForm);
