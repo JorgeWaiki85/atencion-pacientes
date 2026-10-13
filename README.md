@@ -59,13 +59,14 @@ Opciones gratuitas: **Netlify**, **Vercel**, **GitHub Pages** o **Cloudflare Pag
 ## 5. Roles y permisos
 
 El **primer usuario** registrado queda como **ADMINISTRADOR**. Los demás se crean
-desde el panel **Usuarios** (visible solo para el ADMINISTRADOR).
+desde el panel **Usuarios** (visible solo para el ADMINISTRADOR), donde también se
+puede **cambiar el rol** y **ELIMINAR** un usuario.
 
 | Rol | Ver todo | Ingresar | Editar informes | Crear usuarios / reportes |
 |-----|:--------:|:--------:|:---------------:|:-------------------------:|
 | ADMINISTRADOR | Sí | Sí | Sí | Sí |
 | MEDICO        | Sí | Sí | No | No |
-| ENFERMERIA    | Sí | Sí | No | No |
+| ENFERMERA(O)  | Sí | Sí | No | No |
 | TENS          | Sí | Sí | No | No |
 | RESCATISTA    | Solo lo propio | Sí | No | No |
 
@@ -100,6 +101,31 @@ Al exportar, los valores llevan automáticamente:
 
 ---
 
+## 7. Eliminar usuarios definitivamente (Edge Function) — opcional pero recomendado
+
+El panel **Usuarios** permite crear y eliminar usuarios. Para **borrar de verdad la
+cuenta de acceso** (y no solo su perfil) se usa una pequeña función segura en Supabase,
+`admin-usuarios` (código en `supabase/functions/admin-usuarios/index.ts`). Usa la clave
+de servicio **en el servidor**, nunca en el navegador, y verifica que quien llama sea
+ADMINISTRADOR.
+
+**Si NO se instala la función:** los botones siguen funcionando; al eliminar se borra el
+perfil y el usuario **deja de poder entrar** (queda deshabilitado), pero su cuenta de
+correo sigue existiendo.
+
+**Instalación (una sola vez):**
+
+1. Supabase → **Edge Functions** → **Create a new function**.
+2. Nombre exacto: `admin-usuarios`.
+3. Borre el código de ejemplo y pegue el contenido de
+   `supabase/functions/admin-usuarios/index.ts`.
+4. **Deploy**. No hay que configurar claves: Supabase entrega
+   `SUPABASE_URL`, `SUPABASE_ANON_KEY` y `SUPABASE_SERVICE_ROLE_KEY` automáticamente.
+5. Desactive **Verify JWT** si la consola lo pide (la función valida el token por su cuenta),
+   o déjelo activado — funciona de ambas formas.
+
+---
+
 ## Estructura
 
 ```
@@ -115,4 +141,5 @@ AtencionPacientes/
   lib/                  Librerías (Supabase, jsPDF)
   icons/                Iconos de la app
   supabase/schema.sql   Esquema (tablas, roles, RLS, tiempo real)
+  supabase/functions/admin-usuarios/index.ts   Función segura (crear/eliminar usuarios)
 ```

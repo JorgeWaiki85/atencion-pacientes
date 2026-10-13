@@ -5,6 +5,8 @@
   const DB_NAME = "atencion_pacientes";
   const STORE = "registros";
   const ROLES = ["ADMINISTRADOR", "MEDICO", "ENFERMERIA", "TENS", "RESCATISTA"];
+  const ROL_LABEL = { ADMINISTRADOR: "ADMINISTRADOR", MEDICO: "MÉDICO", ENFERMERIA: "ENFERMERA(O)", TENS: "TENS", RESCATISTA: "RESCATISTA" };
+  function rolLabel(r) { return ROL_LABEL[r] || r; }
   const UNITS = { fc: "(LTM)", fr: "(RPM)", sat: "(% AMBIENTE)", egt: "(MG/DL)" };
 
   const LOGO = window.LOGO_DATA_URL || "";
@@ -26,6 +28,7 @@
   let realtimeChannel = null;
   let syncing = false;
   let toastTimer;
+  let usuariosCache = [];
 
   const $ = (id) => document.getElementById(id);
   const $$ = (sel) => Array.prototype.slice.call(document.querySelectorAll(sel));
@@ -181,17 +184,20 @@
   async function loadPerfil() {
     try {
       const res = await sb.from("perfiles").select("id, email, nombre, rol").eq("id", currentUser.id).maybeSingle();
-      if (res.data) currentPerfil = res.data;
-      else currentPerfil = { id: currentUser.id, email: currentUser.email, nombre: currentUser.email, rol: "RESCATISTA" };
+      if (res.data) { currentPerfil = res.data; return true; }
+      if (!res.error) { currentPerfil = null; return false; }
+      currentPerfil = { id: currentUser.id, email: currentUser.email, nombre: currentUser.email, rol: "RESCATISTA" };
+      return true;
     } catch (e) {
       currentPerfil = { id: currentUser.id, email: currentUser.email, nombre: currentUser.email, rol: "RESCATISTA" };
+      return true;
     }
   }
 
   function applyRole() {
     const r = rol();
     const rb = $("roleBadge");
-    rb.textContent = r;
+    rb.textContent = rolLabel(r);
     rb.className = "badge badge-role badge-rol-" + r;
     $("usuariosCard").classList.toggle("hidden", !esAdmin());
     $("reportesCard").classList.toggle("hidden", !esAdmin());
@@ -507,7 +513,8 @@
   async function loadUsuarios() {
     if (!esAdmin()) return;
     const res = await sb.from("perfiles").select("id, email, nombre, rol, creado_at").order("creado_at", { ascending: true });
-    renderUsuarios(res.data || []);
+    usuariosCache = res.data || [];
+    renderUsuarios(usuariosCache);
   }
 
   function renderUsuarios(rows) {
@@ -515,12 +522,16 @@
     if (!rows.length) { box.innerHTML = '<div class="empty">Sin usuarios.</div>'; return; }
     box.innerHTML = rows.map(function (u) {
       const opts = ROLES.map(function (r) {
-        return '<option value="' + r + '"' + (r === u.rol ? " selected" : "") + ">" + r + "</option>";
+        return '<option value="' + r + '"' + (r === u.rol ? " selected" : "") + ">" + rolLabel(r) + "</option>";
       }).join("");
+      const soyYo = currentUser && u.id === currentUser.id;
+      const delBtn = soyYo
+        ? '<button class="btn-mini" disabled title="No puede eliminarse a sí mismo">USTED</button>'
+        : '<button class="btn-mini danger" data-deluser="' + esc(u.id) + '">ELIMINAR</button>';
       return '<div class="user-row">' +
         '<div class="ur-info"><div class="ur-name">' + esc(u.nombre || "(sin nombre)") + '</div>' +
         '<div class="ur-email">' + esc(u.email || "") + "</div></div>" +
-        '<select data-rol="' + esc(u.id) + '">' + opts + "</select>" +
+        '<div class="ur-actions"><select data-rol="' + esc(u.id) + '">' + opts + "</select>" + delBtn + "</div>" +
         "</div>";
     }).join("");
   }
@@ -528,9 +539,35 @@
   async function cambiarRol(id, nuevo) {
     const res = await sb.from("perfiles").update({ rol: nuevo }).eq("id", id);
     if (res.error) { toast("No se pudo cambiar el rol: " + traducir(res.error.message), "err"); return; }
-    toast("Rol actualizado a " + nuevo, "ok");
+    toast("Rol actualizado a " + rolLabel(nuevo), "ok");
     if (currentUser && id === currentUser.id) { await loadPerfil(); applyRole(); }
     loadUsuarios();
+  }
+
+  async function callAdminUsers(payload) {
+    const base = String(cfg.SUPABASE_URL || "").replace(/\/+$/, "");
+    if (!base) return { ok: false, status: 0, body: { error: "Falta SUPABASE_URL" }, sinFuncion: true };
+    let token = cfg.SUPABASE_ANON_KEY || "";
+    try {
+      const s = await sb.auth.getSession();
+      if (s.data && s.data.session && s.data.session.access_token) token = s.data.session.access_token;
+    } catch (e) {}
+    try {
+      const resFetch = await fetch(base + "/functions/v1/admin-usuarios", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": cfg.SUPABASE_ANON_KEY || "",
+          "Authorization": "Bearer " + token
+        },
+        body: JSON.stringify(payload)
+      });
+      let body = null;
+      try { body = await resFetch.json(); } catch (e) {}
+      return { ok: resFetch.ok, status: resFetch.status, body: body, sinFuncion: resFetch.status === 404 };
+    } catch (e) {
+      return { ok: false, status: 0, body: null, sinFuncion: true };
+    }
   }
 
   async function crearUsuario() {
@@ -541,13 +578,27 @@
     if (!email || !password) { toast("Ingrese correo y contraseña", "err"); return; }
     if (password.length < 6) { toast("La contraseña debe tener al menos 6 caracteres", "err"); return; }
     setBtn("btnCrearUsuario", true, "CREAR USUARIO");
-    const res = await sbAdmin.auth.signUp({ email: email, password: password, options: { data: { nombre: nombre } } });
-    if (res.error) {
+    const res = await callAdminUsers({ accion: "crear", email: email, password: password, nombre: nombre, rol: r });
+    if (res.ok && res.body && res.body.ok) {
       setBtn("btnCrearUsuario", false, "CREAR USUARIO");
-      toast(traducir(res.error.message), "err");
+      $("uEmail").value = ""; $("uPassword").value = ""; $("uNombre").value = "";
+      toast("Usuario creado: " + email, "ok");
+      loadUsuarios();
       return;
     }
-    const uid = res.data && res.data.user ? res.data.user.id : null;
+    if (!res.sinFuncion) {
+      setBtn("btnCrearUsuario", false, "CREAR USUARIO");
+      const m = res.body && res.body.error ? res.body.error : "No se pudo crear el usuario";
+      toast(traducir(m), "err");
+      return;
+    }
+    const res2 = await sbAdmin.auth.signUp({ email: email, password: password, options: { data: { nombre: nombre } } });
+    if (res2.error) {
+      setBtn("btnCrearUsuario", false, "CREAR USUARIO");
+      toast(traducir(res2.error.message), "err");
+      return;
+    }
+    const uid = res2.data && res2.data.user ? res2.data.user.id : null;
     if (uid) {
       const upd = await sb.from("perfiles").update({ rol: r, nombre: nombre || email }).eq("id", uid);
       if (upd.error) toast("Usuario creado, pero no se pudo asignar el rol: " + traducir(upd.error.message), "err");
@@ -556,6 +607,29 @@
     $("uEmail").value = ""; $("uPassword").value = ""; $("uNombre").value = "";
     toast("Usuario creado: " + email, "ok");
     loadUsuarios();
+  }
+
+  async function eliminarUsuario(id) {
+    if (!esAdmin()) return;
+    if (currentUser && id === currentUser.id) { toast("No puede eliminarse a sí mismo", "err"); return; }
+    const u = usuariosCache.filter(function (x) { return x.id === id; })[0];
+    const etq = u ? (u.nombre || u.email) : id;
+    if (!confirm('¿Eliminar al usuario "' + etq + '"? Esta acción no se puede deshacer.')) return;
+    const res = await callAdminUsers({ accion: "eliminar", id: id });
+    if (res.ok && res.body && res.body.ok) {
+      toast("Usuario eliminado: " + etq, "ok");
+      loadUsuarios();
+      return;
+    }
+    if (res.sinFuncion) {
+      const del = await sb.from("perfiles").delete().eq("id", id);
+      if (del.error) { toast("No se pudo eliminar: " + traducir(del.error.message), "err"); return; }
+      toast("Usuario deshabilitado (perfil eliminado): " + etq, "ok");
+      loadUsuarios();
+      return;
+    }
+    const m = res.body && res.body.error ? res.body.error : "No se pudo eliminar el usuario";
+    toast(traducir(m), "err");
   }
 
   function addTomaSections(sections, signos) {
@@ -965,7 +1039,17 @@
     $("userEmail").textContent = user.email || "";
     $("loginView").classList.add("hidden");
     $("appView").classList.remove("hidden");
-    await loadPerfil();
+    let okPerfil = await loadPerfil();
+    if (!okPerfil) { await new Promise(function (r) { setTimeout(r, 900); }); okPerfil = await loadPerfil(); }
+    if (!okPerfil) {
+      currentUser = null;
+      currentPerfil = null;
+      $("appView").classList.add("hidden");
+      $("loginView").classList.remove("hidden");
+      loginMsg("Usuario no autorizado. Solicite al administrador que le asigne un perfil.", false);
+      try { await sb.auth.signOut(); } catch (e) {}
+      return;
+    }
     applyRole();
     resetForm();
     updateConn();
@@ -1028,6 +1112,10 @@
     $("usuariosList").addEventListener("change", function (e) {
       const sel = e.target.closest("[data-rol]");
       if (sel) cambiarRol(sel.getAttribute("data-rol"), sel.value);
+    });
+    $("usuariosList").addEventListener("click", function (e) {
+      const del = e.target.closest("[data-deluser]");
+      if (del) eliminarUsuario(del.getAttribute("data-deluser"));
     });
     $("loginPassword").addEventListener("keydown", function (e) { if (e.key === "Enter") doLogin(); });
     window.addEventListener("online", function () { updateConn(); loadRealtime(); syncPending(); });

@@ -260,6 +260,8 @@ textarea { resize: vertical; min-height: 80px; }
 .user-row select {
   padding: 7px 8px; border: 1px solid var(--line); border-radius: 8px; font-size: 13px; background: #fff;
 }
+.user-row .ur-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; justify-content: flex-end; flex-shrink: 0; }
+.user-row .btn-mini:disabled { opacity: .5; cursor: default; }
 
 @media (min-width: 640px) {
   .actions { flex-direction: row; flex-wrap: wrap; }
