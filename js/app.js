@@ -715,7 +715,7 @@
     if (sb && navigator.onLine) {
       try {
         const res = await sb.from("atenciones")
-          .select("id, folio, nombre, run, edad, fecha, hora, cargo_atiende, quien_atiende, creado_cliente, signos(id)")
+          .select("id, folio, nombre, run, edad, fecha, hora, cargo_atiende, quien_atiende, traslado, traslado_lugar, creado_cliente, signos(id)")
           .order("folio", { ascending: true });
         if (!res.error && res.data) return { rows: res.data, local: false };
       } catch (e) {}
@@ -744,14 +744,15 @@
     const M = 12, W = 210, H = 297;
     const usableW = W - 2 * M;
     const cols = [
-      { key: "folio", label: "#", w: 12 },
-      { key: "nombre", label: "Nombre", w: 48 },
-      { key: "run", label: "RUN", w: 26 },
-      { key: "edad", label: "Edad", w: 12 },
-      { key: "fecha", label: "Fecha", w: 22 },
-      { key: "hora", label: "Hora", w: 14 },
-      { key: "cargo_atiende", label: "Quién atiende", w: 40 },
-      { key: "sv", label: "SV", w: 12 }
+      { key: "folio", label: "#", w: 10 },
+      { key: "nombre", label: "Nombre", w: 44 },
+      { key: "run", label: "RUN", w: 24 },
+      { key: "edad", label: "Edad", w: 10 },
+      { key: "fecha", label: "Fecha", w: 20 },
+      { key: "hora", label: "Hora", w: 12 },
+      { key: "cargo_atiende", label: "Quién atiende", w: 30 },
+      { key: "traslado", label: "Traslado", w: 26 },
+      { key: "sv", label: "SV", w: 10 }
     ];
     let y = M;
 
@@ -799,14 +800,20 @@
       y += 6;
     }
 
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(200, 40, 40);
+    doc.text("En rojo: pacientes trasladados a un centro asistencial.", M, y);
+    doc.setTextColor(30, 30, 30);
+    y += 6;
+
     drawTableHeader();
 
     rows.forEach(function (r, i) {
       if (y + 6 > H - M - 8) { doc.addPage(); y = M; drawTableHeader(); }
       if (i % 2 === 1) { doc.setFillColor(240, 245, 247); doc.rect(M, y, usableW, 6, "F"); }
-      doc.setFont("helvetica", "normal");
       doc.setFontSize(9);
-      doc.setTextColor(30, 30, 30);
+      const trasladoSi = (r.traslado === "SI");
       const vals = [
         r.folio != null ? "#" + r.folio : "",
         r.nombre || "",
@@ -815,10 +822,14 @@
         r.fecha || "",
         r.hora || "",
         r.cargo_atiende || "",
+        trasladoSi ? ("SI - " + (r.traslado_lugar || "")) : (r.traslado === "NO" ? "No" : ""),
         String((r.signos || []).length)
       ];
       let x = M;
       vals.forEach(function (v, j) {
+        const rojo = (cols[j].key === "traslado") && trasladoSi;
+        doc.setFont("helvetica", rojo ? "bold" : "normal");
+        doc.setTextColor(rojo ? 200 : 30, rojo ? 40 : 30, rojo ? 40 : 30);
         doc.text(fitText(doc, v, cols[j].w - 3), x + 1.5, y + 4.2);
         x += cols[j].w;
       });
