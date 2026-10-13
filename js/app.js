@@ -184,6 +184,7 @@
     rb.textContent = r;
     rb.className = "badge badge-role badge-rol-" + r;
     $("usuariosCard").classList.toggle("hidden", !esAdmin());
+    $("reportesCard").classList.toggle("hidden", !esAdmin());
     $("realtimeCard").classList.toggle("hidden", !puedeVerTodo());
     if (esAdmin()) loadUsuarios();
     if (!puedeVerTodo()) {
@@ -670,6 +671,151 @@
     }
   }
 
+  function fitText(doc, text, maxW) {
+    text = String(text == null ? "" : text);
+    if (doc.getTextWidth(text) <= maxW) return text;
+    let t = text;
+    while (t.length > 0 && doc.getTextWidth(t + "\u2026") > maxW) t = t.slice(0, -1);
+    return t + "\u2026";
+  }
+
+  async function fetchTodasAtenciones() {
+    if (sb && navigator.onLine) {
+      try {
+        const res = await sb.from("atenciones")
+          .select("id, folio, nombre, run, edad, fecha, hora, cargo_atiende, quien_atiende, creado_cliente, signos(id)")
+          .order("folio", { ascending: true });
+        if (!res.error && res.data) return { rows: res.data, local: false };
+      } catch (e) {}
+    }
+    const local = await idbAll();
+    const rows = local.map(function (r) {
+      return Object.assign({}, r.atencion, { folio: r.folio, signos: r.signos || [] });
+    });
+    rows.sort(function (a, b) {
+      const fa = a.folio == null ? Infinity : a.folio;
+      const fb = b.folio == null ? Infinity : b.folio;
+      return fa - fb;
+    });
+    return { rows: rows, local: true };
+  }
+
+  async function generarPDFGlobal() {
+    if (!esAdmin()) return;
+    toast("Generando reporte...", "ok");
+    const data = await fetchTodasAtenciones();
+    const rows = data.rows;
+    const total = rows.length;
+
+    const jsPDF = window.jspdf.jsPDF;
+    const doc = new jsPDF({ unit: "mm", format: "a4" });
+    const M = 12, W = 210, H = 297;
+    const usableW = W - 2 * M;
+    const cols = [
+      { key: "folio", label: "#", w: 12 },
+      { key: "nombre", label: "Nombre", w: 48 },
+      { key: "run", label: "RUN", w: 26 },
+      { key: "edad", label: "Edad", w: 12 },
+      { key: "fecha", label: "Fecha", w: 22 },
+      { key: "hora", label: "Hora", w: 14 },
+      { key: "cargo_atiende", label: "Quién atiende", w: 40 },
+      { key: "sv", label: "SV", w: 12 }
+    ];
+    let y = M;
+
+    function drawTableHeader() {
+      doc.setFillColor(11, 114, 133);
+      doc.rect(M, y, usableW, 7, "F");
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9.5);
+      doc.setTextColor(255, 255, 255);
+      let x = M;
+      cols.forEach(function (c) { doc.text(c.label, x + 1.5, y + 4.8); x += c.w; });
+      y += 7;
+    }
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.setTextColor(11, 114, 133);
+    doc.text("ATENCIÓN DE PACIENTES", W / 2, y, { align: "center" });
+    y += 7;
+    doc.setFontSize(11);
+    doc.setTextColor(80, 80, 80);
+    doc.text("REPORTE GENERAL DE ATENCIONES", W / 2, y, { align: "center" });
+    y += 6;
+    doc.setFontSize(9.5);
+    doc.text("Emitido: " + todayLocal() + " " + nowHM(), W / 2, y, { align: "center" });
+    y += 6;
+    doc.setDrawColor(11, 114, 133);
+    doc.setLineWidth(0.6);
+    doc.line(M, y, W - M, y);
+    y += 8;
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(13);
+    doc.setTextColor(30, 30, 30);
+    doc.text("Total de pacientes atendidos: " + total, M, y);
+    y += 8;
+    if (data.local) {
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(170, 70, 70);
+      doc.text("(Sin conexión: listado local de este dispositivo)", M, y);
+      y += 6;
+    }
+
+    drawTableHeader();
+
+    rows.forEach(function (r, i) {
+      if (y + 6 > H - M - 8) { doc.addPage(); y = M; drawTableHeader(); }
+      if (i % 2 === 1) { doc.setFillColor(240, 245, 247); doc.rect(M, y, usableW, 6, "F"); }
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(30, 30, 30);
+      const vals = [
+        r.folio != null ? "#" + r.folio : "",
+        r.nombre || "",
+        r.run || "",
+        r.edad || "",
+        r.fecha || "",
+        r.hora || "",
+        r.cargo_atiende || "",
+        String((r.signos || []).length)
+      ];
+      let x = M;
+      vals.forEach(function (v, j) {
+        doc.text(fitText(doc, v, cols[j].w - 3), x + 1.5, y + 4.2);
+        x += cols[j].w;
+      });
+      doc.setDrawColor(222, 226, 230);
+      doc.setLineWidth(0.2);
+      doc.line(M, y + 6, M + usableW, y + 6);
+      y += 6;
+    });
+
+    const pages = doc.getNumberOfPages();
+    for (let p = 1; p <= pages; p++) {
+      doc.setPage(p);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(120, 120, 120);
+      doc.text("Atención de Pacientes - Reporte general", M, H - 6);
+      doc.text("Página " + p + " de " + pages, W - M, H - 6, { align: "right" });
+    }
+
+    const filename = "Reporte_Atenciones_" + total + "_" + todayLocal() + ".pdf";
+    const blob = doc.output("blob");
+    const file = new File([blob], filename, { type: "application/pdf" });
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      navigator.share({ files: [file], title: "Reporte general", text: "Total de pacientes atendidos: " + total })
+        .catch(function () { doc.save(filename); toast("Reporte generado", "ok"); });
+    } else {
+      doc.save(filename);
+      toast("Reporte generado", "ok");
+    }
+  }
+
   async function enterApp(user) {
     currentUser = user;
     $("userEmail").textContent = user.email || "";
@@ -717,6 +863,7 @@
     $("controlNo").addEventListener("change", function () { toggleControl(false); });
     $("btnWhatsapp").addEventListener("click", enviarWhatsapp);
     $("btnPdf").addEventListener("click", generarPDF);
+    $("btnPdfGlobal").addEventListener("click", generarPDFGlobal);
     $("btnGuardar").addEventListener("click", guardar);
     $("btnSyncNow").addEventListener("click", function () { refreshPending(); syncPending(); });
     $("btnCancelEdit").addEventListener("click", resetForm);
