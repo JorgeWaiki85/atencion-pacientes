@@ -55,6 +55,8 @@ body {
   line-height: 1;
 }
 .login-card h1 { text-align: center; font-size: 20px; margin-bottom: 2px; }
+.brand-name { font-size: 24px; letter-spacing: 2px; color: var(--primary); text-transform: uppercase; }
+.login-app-sub { text-align: center; font-weight: 600; font-size: 13px; color: var(--text); margin-bottom: 2px; }
 .login-sub { text-align: center; color: var(--muted); font-size: 13px; margin-bottom: 20px; }
 .login-msg { min-height: 20px; margin-top: 10px; font-size: 14px; text-align: center; color: var(--danger); }
 .login-msg.ok { color: var(--ok); }
@@ -71,7 +73,8 @@ body {
   padding: calc(10px + env(safe-area-inset-top)) 14px 10px;
   box-shadow: var(--shadow);
 }
-.topbar-title { font-weight: 700; font-size: 16px; }
+.topbar-title { font-weight: 700; font-size: 16px; letter-spacing: .5px; }
+.topbar-sub { font-size: 11px; opacity: .85; letter-spacing: .3px; }
 .topbar-right { position: absolute; top: calc(12px + env(safe-area-inset-top)); right: 14px; display: flex; gap: 6px; align-items: center; }
 .topbar-user { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
 .user-email { font-size: 12px; opacity: .9; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
