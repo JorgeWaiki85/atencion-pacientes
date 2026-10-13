@@ -1,4 +1,4 @@
-﻿const CACHE = "atencion-pacientes-v7";
+﻿const CACHE = "atencion-pacientes-v8";
 const ASSETS = [
   "./",
   "./index.html",
@@ -9,7 +9,8 @@ const ASSETS = [
   "./lib/supabase.js",
   "./lib/jspdf.umd.min.js",
   "./icons/icon-192.png",
-  "./icons/icon-512.png"
+  "./icons/icon-512.png",
+  "./icons/logo.jpeg"
 ];
 
 self.addEventListener("install", function (event) {

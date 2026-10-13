@@ -17,7 +17,7 @@
 
   <div id="loginView" class="login-view">
     <div class="login-card">
-      <div class="login-logo">+</div>
+      <div class="login-logo"><img src="icons/logo.jpeg" alt="SAFE MEDICAL"></div>
       <h1 class="brand-name">SAFE MEDICAL</h1>
       <p class="login-app-sub" style="text-align:center">Atención de Pacientes</p>
       <p class="login-sub" style="text-align:center">Registro de atención prehospitalaria</p>
@@ -40,11 +40,18 @@
 
   <div id="appView" class="app-view hidden">
     <header class="topbar">
-      <div class="topbar-title">SAFE MEDICAL</div>
-      <div class="topbar-sub">Atención de Pacientes</div>
-      <div class="topbar-right">
-        <span id="connBadge" class="badge badge-offline">Offline</span>
-        <span id="pendingBadge" class="badge badge-pending hidden">0 pendientes</span>
+      <div class="topbar-row1">
+        <div class="topbar-brand">
+          <img class="topbar-logo" src="icons/logo.jpeg" alt="SAFE MEDICAL">
+          <div class="topbar-titles">
+            <div class="topbar-title">SAFE MEDICAL</div>
+            <div class="topbar-sub">Atención de Pacientes</div>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <span id="connBadge" class="badge badge-offline">Offline</span>
+          <span id="pendingBadge" class="badge badge-pending hidden">0 pendientes</span>
+        </div>
       </div>
       <div class="topbar-user">
         <span id="userEmail" class="user-email"></span>
