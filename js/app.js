@@ -608,8 +608,11 @@
     function ensure(sp) { if (y + sp > H - M) { doc.addPage(); y = M; } }
 
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(16);
+    doc.setFontSize(20);
     doc.setTextColor(11, 114, 133);
+    doc.text("SAFE MEDICAL", W / 2, y, { align: "center" });
+    y += 9;
+    doc.setFontSize(14);
     doc.text("ATENCIÓN DE PACIENTES", W / 2, y, { align: "center" });
     y += 7;
     if (m.folio != null) {
@@ -735,8 +738,11 @@
     }
 
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(16);
+    doc.setFontSize(20);
     doc.setTextColor(11, 114, 133);
+    doc.text("SAFE MEDICAL", W / 2, y, { align: "center" });
+    y += 9;
+    doc.setFontSize(14);
     doc.text("ATENCIÓN DE PACIENTES", W / 2, y, { align: "center" });
     y += 7;
     doc.setFontSize(11);
