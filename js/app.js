@@ -7,6 +7,16 @@
   const ROLES = ["ADMINISTRADOR", "MEDICO", "ENFERMERIA", "TENS", "RESCATISTA"];
   const UNITS = { fc: "(LTM)", fr: "(RPM)", sat: "(% AMBIENTE)", egt: "(MG/DL)" };
 
+  const LOGO = window.LOGO_DATA_URL || "";
+  const LOGO_RATIO = 1217 / 1299;
+
+  function addLogoPDF(doc, W, y, iw) {
+    if (!LOGO) return y;
+    const ih = iw * LOGO_RATIO;
+    try { doc.addImage(LOGO, "JPEG", (W - iw) / 2, y, iw, ih); } catch (e) { return y; }
+    return y + ih;
+  }
+
   let sb = null;
   let sbAdmin = null;
   let currentUser = null;
@@ -636,6 +646,7 @@
 
     function ensure(sp) { if (y + sp > H - M) { doc.addPage(); y = M; } }
 
+    y = addLogoPDF(doc, W, y, 28) + 4;
     doc.setFont("helvetica", "bold");
     doc.setFontSize(20);
     doc.setTextColor(11, 114, 133);
@@ -767,6 +778,7 @@
       y += 7;
     }
 
+    y = addLogoPDF(doc, W, y, 28) + 4;
     doc.setFont("helvetica", "bold");
     doc.setFontSize(20);
     doc.setTextColor(11, 114, 133);

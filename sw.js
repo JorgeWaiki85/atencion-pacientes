@@ -1,10 +1,11 @@
-﻿const CACHE = "atencion-pacientes-v10";
+﻿const CACHE = "atencion-pacientes-v11";
 const ASSETS = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
   "./css/styles.css",
   "./js/config.js",
+  "./js/logo-data.js",
   "./js/app.js",
   "./lib/supabase.js",
   "./lib/jspdf.umd.min.js",
