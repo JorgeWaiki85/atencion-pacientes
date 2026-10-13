@@ -33,6 +33,10 @@ create table if not exists public.atenciones (
 alter table public.atenciones add column if not exists tratamiento         text;
 alter table public.atenciones add column if not exists medicamentos_admin  text;
 alter table public.atenciones add column if not exists cargo_atiende       text;
+alter table public.atenciones add column if not exists traslado            text;
+alter table public.atenciones add column if not exists traslado_lugar      text;
+alter table public.atenciones add column if not exists traslado_ambulancia text;
+alter table public.atenciones add column if not exists traslado_personal   text;
 
 create table if not exists public.signos (
   id          uuid primary key default gen_random_uuid(),

@@ -346,6 +346,10 @@
     }
   }
 
+  function toggleTraslado(show) {
+    $("trasladoContainer").classList.toggle("hidden", !show);
+  }
+
   function readToma(el, orden) {
     const g = function (f) { const i = el.querySelector('[data-field="' + f + '"]'); return i ? i.value.trim() : ""; };
     if (!el.dataset.id) el.dataset.id = uuid();
@@ -366,6 +370,7 @@
   }
 
   function collect() {
+    const traslado = $("trasladoSi").checked ? "SI" : ($("trasladoNo").checked ? "NO" : "");
     const atencion = {
       id: currentRecordId || uuid(),
       fecha: val("fecha"),
@@ -381,6 +386,10 @@
       medicamentos: val("medicamentos"),
       medicamentos_admin: val("medicamentosAdmin"),
       tratamiento: val("tratamiento"),
+      traslado: traslado,
+      traslado_lugar: traslado === "SI" ? val("trasladoLugar") : "",
+      traslado_ambulancia: traslado === "SI" ? val("trasladoAmbulancia") : "",
+      traslado_personal: traslado === "SI" ? val("trasladoPersonal") : "",
       dispositivo: cfg.DISPOSITIVO || ""
     };
     const signos = [];
@@ -412,7 +421,7 @@
     $("folio").value = "";
     $("fecha").value = todayLocal();
     $("hora").value = nowHM();
-    ["quienAtiende", "nombre", "run", "edad", "domicilio", "fono", "enfermedades", "medicamentos", "medicamentosAdmin", "tratamiento"].forEach(function (id) {
+    ["quienAtiende", "nombre", "run", "edad", "domicilio", "fono", "enfermedades", "medicamentos", "medicamentosAdmin", "tratamiento", "trasladoLugar", "trasladoAmbulancia", "trasladoPersonal"].forEach(function (id) {
       const el = $(id);
       if (el) el.value = "";
     });
@@ -421,6 +430,9 @@
     $("controlSi").checked = false;
     $("controlNo").checked = false;
     toggleControl(false);
+    $("trasladoSi").checked = false;
+    $("trasladoNo").checked = false;
+    toggleTraslado(false);
     showEditBanner(false);
   }
 
@@ -450,6 +462,13 @@
     $("medicamentos").value = a.medicamentos || "";
     $("medicamentosAdmin").value = a.medicamentos_admin || "";
     $("tratamiento").value = a.tratamiento || "";
+    const tras = a.traslado || "";
+    $("trasladoSi").checked = (tras === "SI");
+    $("trasladoNo").checked = (tras === "NO");
+    toggleTraslado(tras === "SI");
+    $("trasladoLugar").value = a.traslado_lugar || "";
+    $("trasladoAmbulancia").value = a.traslado_ambulancia || "";
+    $("trasladoPersonal").value = a.traslado_personal || "";
 
     $("signosList").innerHTML = "";
     const list = (a.signos || []).slice().sort(function (x, y) { return (x.orden || 0) - (y.orden || 0); });
@@ -573,6 +592,16 @@
     if (a.medicamentos) sections.push({ title: "MEDICAMENTOS", items: [{ label: "", value: a.medicamentos }] });
     if (a.medicamentos_admin) sections.push({ title: "MEDICAMENTOS ADMINISTRADOS", items: [{ label: "", value: a.medicamentos_admin }] });
     if (a.tratamiento) sections.push({ title: "TRATAMIENTO", items: [{ label: "", value: a.tratamiento }] });
+
+    if (a.traslado) {
+      const tr = [{ label: "¿Se traslada?", value: a.traslado }];
+      if (a.traslado === "SI") {
+        if (a.traslado_lugar) tr.push({ label: "Lugar de traslado", value: a.traslado_lugar });
+        if (a.traslado_ambulancia) tr.push({ label: "Ambulancia", value: a.traslado_ambulancia });
+        if (a.traslado_personal) tr.push({ label: "Personal a cargo", value: a.traslado_personal });
+      }
+      sections.push({ title: "TRASLADO", items: tr });
+    }
 
     return { paciente: a.nombre, fecha: a.fecha, folio: currentFolio, sections: sections };
   }
@@ -867,6 +896,8 @@
     });
     $("controlSi").addEventListener("change", function () { toggleControl(true); });
     $("controlNo").addEventListener("change", function () { toggleControl(false); });
+    $("trasladoSi").addEventListener("change", function () { toggleTraslado(true); });
+    $("trasladoNo").addEventListener("change", function () { toggleTraslado(false); });
     $("btnWhatsapp").addEventListener("click", enviarWhatsapp);
     $("btnPdf").addEventListener("click", generarPDF);
     $("btnPdfGlobal").addEventListener("click", generarPDFGlobal);

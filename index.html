@@ -167,6 +167,29 @@
         <textarea id="tratamiento" rows="4" placeholder="Tratamiento indicado"></textarea>
       </section>
 
+      <section class="card">
+        <h2 class="card-title">Traslado</h2>
+        <p class="hint">¿Se realizó traslado?</p>
+        <div class="check-row">
+          <label class="check-inline"><input type="radio" name="trasladoOn" id="trasladoSi" value="SI"> SI</label>
+          <label class="check-inline"><input type="radio" name="trasladoOn" id="trasladoNo" value="NO"> NO</label>
+        </div>
+        <div id="trasladoContainer" class="hidden">
+          <label class="field">
+            <span>Lugar donde fue trasladado</span>
+            <textarea id="trasladoLugar" rows="3" placeholder="Hospital, centro asistencial, domicilio, etc."></textarea>
+          </label>
+          <label class="field">
+            <span>Ambulancia</span>
+            <textarea id="trasladoAmbulancia" rows="2" placeholder="Identificación / móvil de la ambulancia"></textarea>
+          </label>
+          <label class="field">
+            <span>Personal a cargo</span>
+            <textarea id="trasladoPersonal" rows="2" placeholder="Nombre y cargo del personal a cargo"></textarea>
+          </label>
+        </div>
+      </section>
+
       <div class="actions">
         <button class="btn btn-whatsapp" id="btnWhatsapp">ENVIAR POR WHATSAPP</button>
         <button class="btn btn-pdf" id="btnPdf">GENERAR PDF</button>
