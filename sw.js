@@ -1,4 +1,4 @@
-﻿const CACHE = "atencion-pacientes-v6";
+﻿const CACHE = "atencion-pacientes-v7";
 const ASSETS = [
   "./",
   "./index.html",
@@ -36,7 +36,7 @@ self.addEventListener("fetch", function (event) {
   if (url.origin !== self.location.origin) return;
 
   event.respondWith(
-    fetch(req).then(function (res) {
+    fetch(req, { cache: "reload" }).then(function (res) {
       if (res && res.status === 200 && res.type === "basic") {
         const copy = res.clone();
         caches.open(CACHE).then(function (c) { c.put(req, copy); });
