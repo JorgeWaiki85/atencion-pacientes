@@ -216,6 +216,8 @@ textarea { resize: vertical; min-height: 80px; }
 .btn-pdf { background: var(--pdf); }
 .btn-pdf:active { background: #a93226; }
 .btn-danger { background: #fff; color: var(--danger); border: 2px solid var(--danger); }
+.btn-new { background: var(--ok); }
+.btn-new:active { background: #24794a; }
 .btn-ghost { background: transparent; color: var(--primary); border: 2px solid var(--primary); margin-top: 10px; }
 .btn[disabled] { opacity: .55; cursor: not-allowed; }
 

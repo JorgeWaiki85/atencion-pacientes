@@ -453,6 +453,16 @@
     showEditBanner(false);
   }
 
+  function nuevoPaciente() {
+    const conDatos = ["nombre", "run", "edad", "domicilio", "fono", "motivoConsulta", "tratamiento", "medicamentosAdmin"].some(function (id) { return val(id); });
+    if (conDatos && !confirm("¿Iniciar un nuevo paciente? Se limpiará el formulario actual y los datos no guardados se perderán.")) return;
+    resetForm();
+    $("fecha").value = todayLocal();
+    $("hora").value = nowHM();
+    try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch (e) { window.scrollTo(0, 0); }
+    toast("Nuevo paciente listo", "ok");
+  }
+
   function showEditBanner(on, texto) {
     $("editBanner").classList.toggle("hidden", !on);
     if (on) $("editBannerText").textContent = texto || "";
@@ -1100,6 +1110,7 @@
     $("btnBackupJson").addEventListener("click", respaldoJSON);
     $("btnBackupCsv").addEventListener("click", respaldoCSV);
     $("btnGuardar").addEventListener("click", guardar);
+    $("btnNuevoPaciente").addEventListener("click", nuevoPaciente);
     $("btnSyncNow").addEventListener("click", function () { refreshPending(); syncPending(); });
     $("btnCancelEdit").addEventListener("click", resetForm);
     $("btnCrearUsuario").addEventListener("click", crearUsuario);
