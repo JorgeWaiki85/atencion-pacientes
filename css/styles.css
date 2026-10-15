@@ -64,6 +64,20 @@ body {
   margin-top: 12px; font-size: 12px; color: #92400e; background: #fef3c7;
   padding: 8px 10px; border-radius: 8px; text-align: center;
 }
+.install-help {
+  margin-top: 14px; border: 1px solid var(--line); border-radius: 9px;
+  background: #f8fafb; font-size: 13px; overflow: hidden;
+}
+.install-help > summary {
+  cursor: pointer; padding: 10px 12px; font-weight: 700; color: var(--primary);
+  list-style: none; display: flex; align-items: center; justify-content: space-between;
+}
+.install-help > summary::-webkit-details-marker { display: none; }
+.install-help > summary::after { content: "+"; font-size: 16px; font-weight: 700; }
+.install-help[open] > summary::after { content: "\2212"; }
+.install-help .install-body { padding: 0 12px 10px; color: var(--text); }
+.install-help .install-body p { margin: 6px 0; line-height: 1.45; }
+.install-help .install-note { color: var(--muted); font-size: 12px; }
 
 /* ---------------- TOPBAR ---------------- */
 .topbar {
