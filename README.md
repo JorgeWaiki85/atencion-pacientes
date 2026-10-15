@@ -80,8 +80,8 @@ base de datos (RLS de Supabase), así nadie puede saltarse las reglas manipuland
 - **FECHA / HORA**: se llenan automáticamente.
 - **Signos vitales**: elija SI / NO. Con SI aparece **+** para agregar tomas
   (Hora automática + PA, FC, FR, SAT, EGT, T°, EVA, CINCINNATI), las veces necesarias.
-- **Enfermedades de base**, **Medicamentos**, **Medicamentos administrados** y
-  **Tratamiento**: cuadros de texto.
+- **Enfermedades de base**, **Medicamentos**, **Medicamentos administrados**,
+  **Motivo de la consulta** y **Tratamiento**: cuadros de texto.
 - **ENVIAR POR WHATSAPP**: abre WhatsApp con el resumen (solo campos con datos).
 - **GENERAR PDF**: crea el PDF ordenado (títulos y etiquetas en negrita).
 - **GUARDAR Y SINCRONIZAR**: guarda local y sube a Supabase cuando hay internet.

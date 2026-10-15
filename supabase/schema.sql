@@ -31,6 +31,7 @@ create table if not exists public.atenciones (
 );
 
 alter table public.atenciones add column if not exists tratamiento         text;
+alter table public.atenciones add column if not exists motivo_consulta     text;
 alter table public.atenciones add column if not exists medicamentos_admin  text;
 alter table public.atenciones add column if not exists cargo_atiende       text;
 alter table public.atenciones add column if not exists traslado            text;
