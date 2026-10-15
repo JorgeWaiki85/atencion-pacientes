@@ -1,4 +1,4 @@
-﻿const CACHE = "atencion-pacientes-v15";
+﻿const CACHE = "atencion-pacientes-v16";
 const ASSETS = [
   "./",
   "./index.html",

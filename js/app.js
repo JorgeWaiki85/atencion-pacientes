@@ -400,9 +400,9 @@
       fono: val("fono"),
       enfermedades_base: val("enfermedades"),
       medicamentos: val("medicamentos"),
-      medicamentos_admin: val("medicamentosAdmin"),
       motivo_consulta: val("motivoConsulta"),
       tratamiento: val("tratamiento"),
+      medicamentos_admin: val("medicamentosAdmin"),
       traslado: traslado,
       traslado_lugar: traslado === "SI" ? val("trasladoLugar") : "",
       traslado_ambulancia: traslado === "SI" ? val("trasladoAmbulancia") : "",
@@ -438,7 +438,7 @@
     $("folio").value = "";
     $("fecha").value = todayLocal();
     $("hora").value = nowHM();
-    ["quienAtiende", "nombre", "run", "edad", "domicilio", "fono", "enfermedades", "medicamentos", "medicamentosAdmin", "motivoConsulta", "tratamiento", "trasladoLugar", "trasladoAmbulancia", "trasladoPersonal"].forEach(function (id) {
+    ["quienAtiende", "nombre", "run", "edad", "domicilio", "fono", "enfermedades", "medicamentos", "motivoConsulta", "tratamiento", "medicamentosAdmin", "trasladoLugar", "trasladoAmbulancia", "trasladoPersonal"].forEach(function (id) {
       const el = $(id);
       if (el) el.value = "";
     });
@@ -676,9 +676,9 @@
 
     if (a.enfermedades_base) sections.push({ title: "ENFERMEDADES DE BASE", items: [{ label: "", value: a.enfermedades_base }] });
     if (a.medicamentos) sections.push({ title: "MEDICAMENTOS", items: [{ label: "", value: a.medicamentos }] });
-    if (a.medicamentos_admin) sections.push({ title: "MEDICAMENTOS ADMINISTRADOS", items: [{ label: "", value: a.medicamentos_admin }] });
     if (a.motivo_consulta) sections.push({ title: "MOTIVO DE LA CONSULTA", items: [{ label: "", value: a.motivo_consulta }] });
     if (a.tratamiento) sections.push({ title: "TRATAMIENTO", items: [{ label: "", value: a.tratamiento }] });
+    if (a.medicamentos_admin) sections.push({ title: "MEDICAMENTOS ADMINISTRADOS", items: [{ label: "", value: a.medicamentos_admin }] });
 
     if (a.traslado) {
       const tr = [{ label: "¿Se traslada?", value: a.traslado }];
@@ -1014,7 +1014,7 @@
     try {
       const all = await fetchAllAtencionesFull();
       const cols = ["folio", "fecha", "hora", "cargo_atiende", "quien_atiende", "nombre", "run", "edad",
-        "domicilio", "fono", "enfermedades_base", "medicamentos", "medicamentos_admin", "motivo_consulta", "tratamiento",
+        "domicilio", "fono", "enfermedades_base", "medicamentos", "motivo_consulta", "tratamiento", "medicamentos_admin",
         "traslado", "traslado_lugar", "traslado_ambulancia", "traslado_personal", "dispositivo",
         "creado_cliente", "sincronizado_at", "id", "user_id"];
       const lines = [];
