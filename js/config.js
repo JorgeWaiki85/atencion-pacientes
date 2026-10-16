@@ -1,7 +1,10 @@
 /* ============================================================
    CONFIGURACION  -  ATENCION DE PACIENTES
    ------------------------------------------------------------
-   Rellena estos 2 datos con los de TU proyecto Supabase:
+   Esta app comparte la MISMA base de datos que SCEM
+   (Sistema de Comando de Eventos Masivos), de modo que los
+   pacientes atendidos aqui aparecen en el informe del evento
+   correspondiente en SCEM.
 
    Supabase -> Project Settings -> API
      - Project URL            -> SUPABASE_URL
@@ -13,9 +16,9 @@
    ============================================================ */
 
 window.CONFIG = {
-  SUPABASE_URL: "https://zdsqmdqnqtigvktlmldl.supabase.co",
-  SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpkc3FtZHFucXRpZ3ZrdGxtbGRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE4NjY0NTYsImV4cCI6MjEwNzQ0MjQ1Nn0.HF-0nV0MGTCI3MkMiZItcEMAKOsyNXKpAMRC2yPogD0",
+  SUPABASE_URL: "https://btrcuaeimngkdojptilj.supabase.co",
+  SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ0cmN1YWVpbW5na2RvanB0aWxqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIxMTI2MTIsImV4cCI6MjEwNzY4ODYxMn0.zIgHvZgoxoPkLB4KN4FIhHzAu4K0B1--pHzTwsUoTQg",
 
   // Nombre que identifica a este dispositivo en los registros
-  DISPOSITIVO: "dispositivo-01"
+  DISPOSITIVO: "dispositivo-01",
 };

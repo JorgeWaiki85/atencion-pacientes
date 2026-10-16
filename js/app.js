@@ -29,6 +29,7 @@
   let syncing = false;
   let toastTimer;
   let usuariosCache = [];
+  let eventosCache = [];
 
   const $ = (id) => document.getElementById(id);
   const $$ = (sel) => Array.prototype.slice.call(document.querySelectorAll(sel));
@@ -385,6 +386,42 @@
     $$("#cargoAtiendeGroup input").forEach(function (c) { c.checked = set.indexOf(c.value) >= 0; });
   }
 
+  /* ---------------- Vinculo con eventos de SCEM ---------------- */
+  async function opcionesEventos() {
+    if (sb && navigator.onLine) {
+      try {
+        const res = await sb.from("incidentes")
+          .select("id, folio, tipo, estado")
+          .order("folio", { ascending: false })
+          .limit(500);
+        if (!res.error && res.data) eventosCache = res.data;
+      } catch (e) {}
+    }
+    return eventosCache;
+  }
+
+  async function cargarSelectorEventos(seleccion) {
+    const sel = $("evento");
+    if (!sel) return;
+    const actual = (seleccion != null) ? seleccion : sel.value;
+    const lista = await opcionesEventos();
+    let html = '<option value="">Sin evento</option>';
+    lista.forEach(function (e) {
+      const label = (e.folio != null ? "#" + e.folio + " · " : "") + (e.tipo || "(sin tipo)") + (e.estado ? " · " + e.estado : "");
+      html += '<option value="' + esc(e.id) + '">' + esc(label) + "</option>";
+    });
+    sel.innerHTML = html;
+    sel.value = actual || "";
+    if (sel.value !== (actual || "")) sel.value = "";
+  }
+
+  function eventoLabel(id) {
+    if (!id) return "";
+    const ev = eventosCache.filter(function (e) { return e.id === id; })[0];
+    if (!ev) return id;
+    return (ev.folio != null ? "#" + ev.folio + " · " : "") + (ev.tipo || "(sin tipo)") + (ev.estado ? " · " + ev.estado : "");
+  }
+
   function collect() {
     const traslado = $("trasladoSi").checked ? "SI" : ($("trasladoNo").checked ? "NO" : "");
     const atencion = {
@@ -407,6 +444,7 @@
       traslado_lugar: traslado === "SI" ? val("trasladoLugar") : "",
       traslado_ambulancia: traslado === "SI" ? val("trasladoAmbulancia") : "",
       traslado_personal: traslado === "SI" ? val("trasladoPersonal") : "",
+      incidente_id: val("evento") || null,
       dispositivo: cfg.DISPOSITIVO || ""
     };
     const signos = [];
@@ -443,6 +481,7 @@
       if (el) el.value = "";
     });
     marcarCargos("");
+    if ($("evento")) $("evento").value = "";
     $("signosList").innerHTML = "";
     $("controlSi").checked = false;
     $("controlNo").checked = false;
@@ -479,6 +518,7 @@
     $("fecha").value = a.fecha || todayLocal();
     $("hora").value = a.hora || nowHM();
     marcarCargos(a.cargo_atiende);
+    await cargarSelectorEventos(a.incidente_id || "");
     $("quienAtiende").value = a.quien_atiende || "";
     $("nombre").value = a.nombre || "";
     $("run").value = a.run || "";
@@ -672,6 +712,7 @@
     if (a.hora) head.push({ label: "Hora", value: a.hora });
     if (a.cargo_atiende) head.push({ label: "Quién atiende", value: a.cargo_atiende });
     if (a.quien_atiende) head.push({ label: "Nombre de quien atiende", value: a.quien_atiende });
+    if (a.incidente_id) head.push({ label: "Evento", value: eventoLabel(a.incidente_id) });
     if (head.length) sections.push({ title: "ATENCIÓN DE PACIENTES", items: head });
 
     const les = [];
@@ -1065,6 +1106,7 @@
     }
     applyRole();
     resetForm();
+    cargarSelectorEventos();
     updateConn();
     await refreshPending();
     syncPending();
